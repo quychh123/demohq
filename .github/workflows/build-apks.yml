@@ -1,0 +1,71 @@
+name: Build Dual APKs (HQ Apple & Kho Hang Min)
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Prepare debug keystore and env
+        run: |
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          elif [ ! -f debug.keystore ]; then
+            keytool -genkeypair -v -keystore debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          fi
+
+      - name: Build HQ Apple & Kho Hang Min APKs
+        run: gradle :app:assembleDebug :khohangmin:assembleDebug --no-daemon
+
+      - name: Collect APK files
+        run: |
+          mkdir -p apk-dist
+          cp app/build/outputs/apk/debug/app-debug.apk apk-dist/HQ-Apple-debug.apk
+          cp khohangmin/build/outputs/apk/debug/khohangmin-debug.apk apk-dist/Kho-Hang-Min-debug.apk
+          ls -lh apk-dist/
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hq-apple-and-khohangmin-apks
+          path: apk-dist/*.apk
+
+      - name: Publish APKs to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-apks
+          name: "HQ Apple & Kho Hàng Min (Latest APKs)"
+          body: "Tải trực tiếp 2 tệp cài đặt APK bên dưới: `HQ-Apple-debug.apk` và `Kho-Hang-Min-debug.apk`."
+          files: |
+            apk-dist/HQ-Apple-debug.apk
+            apk-dist/Kho-Hang-Min-debug.apk
+          make_latest: true
