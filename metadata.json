@@ -1,0 +1,6 @@
+{
+  "name": "HQ Apple",
+  "description": "Bộ đôi ứng dụng Bán Hàng HQ Apple và Kho Hàng Min quản lý bán hàng, tồn kho và xuất tệp APK riêng biệt.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

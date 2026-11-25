@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hqapple-khohangmin-sync
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
